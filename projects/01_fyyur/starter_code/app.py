@@ -41,9 +41,9 @@ class Venue(db.Model):
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
     website = db.Column(db.String(120))
+    genres = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
     seeking_description = db.Column(db.Text(), nullable=True)
-    genres = db.Column(db.String(120))
 
 
 class Artist(db.Model):
@@ -61,9 +61,22 @@ class Artist(db.Model):
     seeking_venue = db.Column(db.Boolean, default=False, nullable=False)
     seeking_description = db.Column(db.Text(), nullable=True)
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    # db.relationship to get all shows?
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
+class Show(db.Model):
+    __tablename__ = 'Shows'
+
+    id = db.Column(db.Integer, primary_key=True)
+    artist_id = db.Column(db.Integer, db.ForeignKey(
+        'Artist.id'), nullable=False)
+    artist_name = db.Column(db.String)
+    artist_image_link = db.Column(db.String(500))
+    # Should be in forat: "2019-05-21T21:30:00.000Z"
+    start_time = db.Column(db.DateTime)
+
+    # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -240,9 +253,12 @@ def create_venue_submission():
         city = request.form['city']
         state = request.form['state']
         address = request.form['address']
-        phone = request.form['phone']
-        # image_link = request.form['image_link']
-        facebook_link = request.form['facebook_link']
+        phone = request.form.get('phone')
+        genres = request.form.getlist('genres')
+        facebook_link = request.form.get('facebook_link')
+        image_link = request.form.get('image_link')
+        website = request.form.get('website')
+        seeking_talent = request.form.get('seeking_talent')
 
         print(request.form.get('image_link'))
 
@@ -252,8 +268,11 @@ def create_venue_submission():
             state=state,
             address=address,
             phone=phone,
-            # image_link=image_link,
-            facebook_link=facebook_link
+            genres=genres,
+            facebook_link=facebook_link,
+            website=website,
+            image_link=image_link,
+            seeking_talent=seeking_talent
         )
 
         # raise ValueError('A very specific bad thing happened.')
