@@ -30,8 +30,6 @@ migrate = Migrate(app, db)
 
 
 class Venue(db.Model):
-    __tablename__ = 'Venue'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     city = db.Column(db.String(120))
@@ -44,11 +42,13 @@ class Venue(db.Model):
     genres = db.Column(db.String(120))
     seeking_talent = db.Column(db.Boolean, default=False, nullable=False)
     seeking_description = db.Column(db.Text(), nullable=True)
+    shows = db.relationship('Show', backref="venue", lazy=True)
+
+    def __repr__(self):
+        return '<Venue {}>'.format(self.name)
 
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
-
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String)
     city = db.Column(db.String(120))
@@ -60,22 +60,21 @@ class Artist(db.Model):
     website = db.Column(db.String(120))
     seeking_venue = db.Column(db.Boolean, default=False, nullable=False)
     seeking_description = db.Column(db.Text(), nullable=True)
+    shows = db.relationship('Show', backref="artist", lazy=True)
 
-    # db.relationship to get all shows?
+    def __repr__(self):
+        return '<Artist {}>'.format(self.name)
 
 
 class Show(db.Model):
-    __tablename__ = 'Shows'
-
     id = db.Column(db.Integer, primary_key=True)
     artist_id = db.Column(db.Integer, db.ForeignKey(
-        'Artist.id'), nullable=False)
-    artist_name = db.Column(db.String)
-    artist_image_link = db.Column(db.String(500))
-    # Should be in forat: "2019-05-21T21:30:00.000Z"
-    start_time = db.Column(db.DateTime)
+        'artist.id'), nullable=False)
+    venue_id = db.Column(db.Integer, db.ForeignKey('venue.id'), nullable=False)
+    start_time = db.Column(db.DateTime, nullable=False)
 
-    # TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
+    def __repr__(self):
+        return '<Show {}{}>'.format(self.artist_id, self.venue_id)
 
 
 #----------------------------------------------------------------------------#
@@ -259,6 +258,7 @@ def create_venue_submission():
         image_link = request.form.get('image_link')
         website = request.form.get('website')
         seeking_talent = request.form.get('seeking_talent')
+        seeking_description = request.form.get('seeking_description')
 
         print(request.form.get('image_link'))
 
@@ -272,7 +272,8 @@ def create_venue_submission():
             facebook_link=facebook_link,
             website=website,
             image_link=image_link,
-            seeking_talent=seeking_talent
+            seeking_talent=True if seeking_talent == 'y' else False,
+            seeking_description=seeking_description
         )
 
         # raise ValueError('A very specific bad thing happened.')
@@ -489,18 +490,26 @@ def create_artist_submission():
     try:
         name = request.form['name']
         city = request.form['city']
-        state = request.form.get('state')
+        state = request.form['state']
         phone = request.form.get('phone')
-        # genres = request.form.get('genres')
+        genres = request.form.getlist('genres')
         facebook_link = request.form.get('facebook_link')
+        image_link = request.form.get('image_link')
+        website = request.form.get('website')
+        seeking_venue = request.form.get('seeking_venue')
+        seeking_description = request.form.get('seeking_description')
 
         artist = Artist(
             name=name,
             city=city,
             state=state,
             phone=phone,
-            # genres=genres,
-            facebook_link=facebook_link
+            genres=genres,
+            facebook_link=facebook_link,
+            website=website,
+            image_link=image_link,
+            seeking_venue=True if seeking_venue == 'y' else False,
+            seeking_description=seeking_description
         )
 
         # raise ValueError('A very specific bad thing happened.')

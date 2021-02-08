@@ -26,6 +26,7 @@ class VenueForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
+        # TODO implement validation logic for state
         'state', validators=[DataRequired()],
         choices=[
             ('AL', 'AL'),
@@ -125,6 +126,9 @@ class VenueForm(Form):
         'website', validators=[URL()]
     )
     seeking_talent = BooleanField('seeking_talent', default=False)
+    seeking_description = StringField(
+        'seeking_description'
+    )
 
 
 class ArtistForm(Form):
@@ -135,6 +139,7 @@ class ArtistForm(Form):
         'city', validators=[DataRequired()]
     )
     state = SelectField(
+        # TODO implement validation logic for state
         'state', validators=[DataRequired()],
         choices=[
             ('AL', 'AL'),
@@ -191,7 +196,6 @@ class ArtistForm(Form):
         ]
     )
     phone = StringField(
-        # TODO implement validation logic for state
         'phone'
     )
     image_link = StringField(
@@ -226,5 +230,18 @@ class ArtistForm(Form):
         # TODO implement enum restriction
         'facebook_link', validators=[URL()]
     )
+    image_link = StringField(
+        'image_link', validators=[URL()]
+    )
+    website = StringField(
+        'website', validators=[URL()]
+    )
+    seeking_venue = BooleanField('seeking_venue', default=False)
+    seeking_description = StringField(
+        'seeking_description'
+    )
 
-# TODO IMPLEMENT NEW ARTIST FORM AND NEW SHOW FORM
+
+class ShowForm(Form):
+    # TODO IMPLEMENT NEW SHOW FORM
+    pass
