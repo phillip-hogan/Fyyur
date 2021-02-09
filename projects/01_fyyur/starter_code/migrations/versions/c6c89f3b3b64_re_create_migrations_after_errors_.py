@@ -1,8 +1,8 @@
-"""Re-create migrations after errors. Create correct venue, artist, show models.
+"""Re-create migrations after errors. Create correct venue, artist, show models. Update genres to use db.Array.
 
-Revision ID: eb2bf47bf8af
+Revision ID: c6c89f3b3b64
 Revises: 
-Create Date: 2021-02-08 08:24:24.114748
+Create Date: 2021-02-09 08:15:18.542060
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'eb2bf47bf8af'
+revision = 'c6c89f3b3b64'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,7 +24,7 @@ def upgrade():
     sa.Column('city', sa.String(length=120), nullable=True),
     sa.Column('state', sa.String(length=120), nullable=True),
     sa.Column('phone', sa.String(length=120), nullable=True),
-    sa.Column('genres', sa.String(length=120), nullable=True),
+    sa.Column('genres', sa.ARRAY(sa.String()), nullable=True),
     sa.Column('image_link', sa.String(length=500), nullable=True),
     sa.Column('facebook_link', sa.String(length=120), nullable=True),
     sa.Column('website', sa.String(length=120), nullable=True),
@@ -42,7 +42,7 @@ def upgrade():
     sa.Column('image_link', sa.String(length=500), nullable=True),
     sa.Column('facebook_link', sa.String(length=120), nullable=True),
     sa.Column('website', sa.String(length=120), nullable=True),
-    sa.Column('genres', sa.String(length=120), nullable=True),
+    sa.Column('genres', sa.ARRAY(sa.String()), nullable=True),
     sa.Column('seeking_talent', sa.Boolean(), nullable=False),
     sa.Column('seeking_description', sa.Text(), nullable=True),
     sa.PrimaryKeyConstraint('id')
