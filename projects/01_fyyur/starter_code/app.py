@@ -137,24 +137,31 @@ def venues():
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for Hop should return "The Musical Hop".
-    # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
+    search_term = request.form.get('search_term', '')
+    search_results = Venue.query.filter(
+        Venue.name.ilike(f'%{search_term}%')).all()
+
     response = {
-        "count": 1,
+        "count": len(search_results),
         "data": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
+            "id": search_result.id,
+            "name": search_result.name,
+            "num_upcoming_shows": len(db.session.query(Artist, Show).
+                                      join(Show).join(Venue).
+                                      filter(
+                Show.venue_id == search_result.id,
+                Show.artist_id == Artist.id,
+                Show.start_time > datetime.now()
+            ).
+                all())
+        } for search_result in search_results]
     }
-    return render_template('pages/search_venues.html', results=response, search_term=request.form.get('search_term', ''))
+    print(response)
+    return render_template('pages/search_venues.html', results=response, search_term=search_term)
 
 
 @app.route('/venues/<int:venue_id>')
 def show_venue(venue_id):
-    # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
     venue = Venue.query.filter_by(id=venue_id).first_or_404()
 
     past_shows = db.session.query(Artist, Show). \
@@ -203,7 +210,7 @@ def show_venue(venue_id):
             'artist_image_link': artist.image_link,
             'start_time': show.start_time.strftime("%m/%d/%Y, %H:%M")
         } for artist, show in upcoming_shows],
-        'upcoming_shows_counts': len(upcoming_shows)
+        'upcoming_shows_count': len(upcoming_shows)
 
 
     }
