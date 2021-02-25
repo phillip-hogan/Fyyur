@@ -109,29 +109,39 @@ def index():
 
 @app.route('/venues')
 def venues():
-    # TODO: replace with real venues data.
-    #       num_shows should be aggregated based on number of upcoming shows per venue.
-    data = [{
-        "city": "San Francisco",
-        "state": "CA",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0,
-        }, {
-            "id": 3,
-            "name": "Park Square Live Music & Coffee",
-            "num_upcoming_shows": 1,
-        }]
-    }, {
-        "city": "New York",
-        "state": "NY",
-        "venues": [{
-            "id": 2,
-            "name": "The Dueling Pianos Bar",
-            "num_upcoming_shows": 0,
-        }]
-    }]
+    areas = Venue.query.distinct(
+        Venue.city, Venue.state).order_by('state').all()
+
+    data = []
+
+    for area in areas:
+        venues = Venue.query.filter_by(state=area.state).filter_by(
+            city=area.city).order_by('name').all()
+
+        venue_data = []
+
+        data.append({
+            'city': area.city,
+            'state': area.state,
+            'venues': venue_data
+        })
+
+        for venue in venues:
+            upcoming_shows = db.session.query(Artist, Show). \
+                join(Show).join(Venue). \
+                filter(
+                Show.venue_id == venue.id,
+                Show.artist_id == Artist.id,
+                Show.start_time > datetime.now()
+            ). \
+                all()
+
+            venue_data.append({
+                'id': venue.id,
+                'name': venue.name,
+                'num_upcoming_shows': len(upcoming_shows)
+            })
+
     return render_template('pages/venues.html', areas=data)
 
 
@@ -305,7 +315,7 @@ def search_artists():
 
 @ app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    # TODO sort past and upcmoing shows.
+    # TODO sort past and upcoming shows.
 
     artist = Artist.query.filter_by(id=artist_id).first_or_404()
 
