@@ -157,6 +157,9 @@ p > i {
 .genres {
   margin-bottom: 15px;
 }
+.venue-delete {
+  margin: 15px 0;
+}
 span.genre {
   display: inline-block;
   font-family: monospace;
