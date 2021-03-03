@@ -188,6 +188,7 @@ def show_venue(venue_id):
         Show.artist_id == Artist.id,
         Show.start_time < datetime.now()
     ). \
+        order_by(Show.start_time.desc()). \
         all()
 
     upcoming_shows = db.session.query(Artist, Show). \
@@ -197,6 +198,7 @@ def show_venue(venue_id):
         Show.artist_id == Artist.id,
         Show.start_time > datetime.now()
     ). \
+        order_by(Show.start_time.desc()). \
         all()
 
     data = {
@@ -271,8 +273,6 @@ def create_venue_submission():
             seeking_description=seeking_description
         )
 
-        # raise ValueError('A very specific bad thing happened.')
-
         db.session.add(venue)
         db.session.commit()
         flash('Venue ' + venue.name + ' was successfully listed!')
@@ -291,8 +291,6 @@ def create_venue_submission():
 def delete_venue(venue_id):
     try:
         venue = Venue.query.filter_by(id=venue_id).first_or_404()
-
-        # raise ValueError('A very specific bad thing happened.')
 
         db.session.delete(venue)
         db.session.commit()
@@ -344,8 +342,6 @@ def search_artists():
 
 @app.route('/artists/<int:artist_id>')
 def show_artist(artist_id):
-    # TODO sort past and upcoming shows.
-
     artist = Artist.query.filter_by(id=artist_id).first_or_404()
 
     past_shows = db.session.query(Venue, Show). \
@@ -355,6 +351,7 @@ def show_artist(artist_id):
         Show.artist_id == artist_id,
         Show.start_time < datetime.now()
     ). \
+        order_by(Show.start_time.desc()). \
         all()
 
     upcoming_shows = db.session.query(Venue, Show). \
@@ -364,6 +361,7 @@ def show_artist(artist_id):
         Show.artist_id == artist_id,
         Show.start_time > datetime.now()
     ). \
+        order_by(Show.start_time.desc()). \
         all()
 
     data = {
@@ -425,8 +423,6 @@ def edit_artist_submission(artist_id):
         artist.seeking_venue = form.seeking_venue.data
         artist.seeking_description = form.seeking_description.data
 
-        # raise ValueError('A very specific bad thing happened.')
-
         db.session.commit()
         flash('Artist ' + artist.name + ' was successfully updated!')
     except:
@@ -465,8 +461,6 @@ def edit_venue_submission(venue_id):
         venue.website = form.website.data
         venue.seeking_talent = form.seeking_talent.data
         venue.seeking_description = form.seeking_description.data
-
-        # raise ValueError('A very specific bad thing happened.')
 
         db.session.commit()
         flash('Venue ' + venue.name + ' was successfully updated!')
@@ -519,8 +513,6 @@ def create_artist_submission():
             seeking_description=seeking_description
         )
 
-        # raise ValueError('A very specific bad thing happened.')
-
         db.session.add(artist)
         db.session.commit()
         flash('Artist ' + artist.name + ' was successfully listed!')
@@ -540,18 +532,17 @@ def create_artist_submission():
 
 @app.route('/shows')
 def shows():
-    # TODO: Order shows by date. Show past shows? Do I need to aggregate upcoming shows by num?
-    # Instructions said to do this but data is not used in view.
     data = []
 
-    shows = Show.query.all()
+    shows = Show.query.order_by(Show.start_time.desc()).all()
 
     for show in shows:
         for artist, venue in db.session.query(Artist, Venue). \
             filter(
             Venue.id == show.venue_id,
             Artist.id == show.artist_id,
-        ).all():
+        ) \
+                .all():
             data.append({
                 "venue_id": show.venue_id,
                 "artist_id": show.artist_id,
@@ -561,7 +552,6 @@ def shows():
                 "artist_image_link": artist.image_link,
             })
 
-        print(data)
     return render_template('pages/shows.html', shows=data)
 
 
@@ -587,8 +577,6 @@ def create_show_submission():
             start_time=start_time
         )
 
-        # raise ValueError('A very specific bad thing happened.')
-
         db.session.add(show)
         db.session.commit()
         flash('Show was successfully listed!')
@@ -600,6 +588,35 @@ def create_show_submission():
         db.session.close()
 
     return render_template('pages/home.html')
+
+
+@app.route('/shows/search', methods=['POST'])
+def search_shows():
+    search_term = request.form.get('search_term', '')
+
+    search_results = db.session.query(Show). \
+        join(Artist). \
+        join(Venue). \
+        filter(
+        (Artist.name.ilike(f'%{search_term}%')
+         | Venue.name.ilike(f'%{search_term}%'))
+    ). \
+        order_by(Show.start_time.desc()). \
+        all()
+
+    data = []
+
+    for search_result in search_results:
+        data.append({
+            "venue_id": search_result.venue_id,
+            "artist_id": search_result.artist_id,
+            "start_time": search_result.start_time.strftime("%m/%d/%Y, %H:%M:%S"),
+            "venue_name": search_result.venue.name,
+            "artist_name": search_result.artist.name,
+            "artist_image_link": search_result.artist.image_link,
+        })
+
+    return render_template('pages/shows.html', shows=data, search_term=search_term)
 
 
 @app.errorhandler(404)
