@@ -173,7 +173,7 @@ def search_venues():
                 all())
         } for search_result in search_results]
     }
-    print(response)
+
     return render_template('pages/search_venues.html', results=response, search_term=search_term)
 
 
@@ -242,19 +242,20 @@ def create_venue_form():
 
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
-    # TODO use WTForms
+    form = VenueForm(request.form)
+
     try:
-        name = request.form['name']
-        city = request.form['city']
-        state = request.form['state']
-        address = request.form['address']
-        phone = request.form.get('phone')
-        genres = request.form.getlist('genres')
-        facebook_link = request.form.get('facebook_link')
-        image_link = request.form.get('image_link')
-        website = request.form.get('website')
-        seeking_talent = request.form.get('seeking_talent')
-        seeking_description = request.form.get('seeking_description')
+        name = form.name.data
+        city = form.city.data
+        state = form.state.data
+        address = form.address.data
+        phone = form.phone.data
+        genres = form.genres.data
+        facebook_link = form.facebook_link.data
+        image_link = form.image_link.data
+        website = form.website.data
+        seeking_talent = form.seeking_talent.data
+        seeking_description = form.seeking_description.data
 
         venue = Venue(
             name=name,
@@ -266,7 +267,7 @@ def create_venue_submission():
             facebook_link=facebook_link,
             website=website,
             image_link=image_link,
-            seeking_talent=True if seeking_talent == 'y' else False,
+            seeking_talent=seeking_talent,
             seeking_description=seeking_description
         )
 
@@ -317,18 +318,28 @@ def artists():
 
 @app.route('/artists/search', methods=['POST'])
 def search_artists():
-    # TODO: implement search on artists with partial string search. Ensure it is case-insensitive.
-    # seach for "A" should return "Guns N Petals", "Matt Quevado", and "The Wild Sax Band".
-    # search for "band" should return "The Wild Sax Band".
+
+    search_term = request.form.get('search_term', '')
+    search_results = Artist.query.filter(
+        Artist.name.ilike(f'%{search_term}%')).all()
+
     response = {
-        "count": 1,
+        "count": len(search_results),
         "data": [{
-            "id": 4,
-            "name": "Guns N Petals",
-            "num_upcoming_shows": 0,
-        }]
+            "id": search_result.id,
+            "name": search_result.name,
+            "num_upcoming_shows": len(db.session.query(Artist, Show).
+                                      join(Show).join(Venue).
+                                      filter(
+                Show.venue_id == Venue.id,
+                Show.artist_id == search_result.id,
+                Show.start_time > datetime.now()
+            ).
+                all())
+        } for search_result in search_results]
     }
-    return render_template('pages/search_artists.html', results=response, search_term=request.form.get('search_term', ''))
+
+    return render_template('pages/search_artists.html', results=response, search_term=search_term)
 
 
 @app.route('/artists/<int:artist_id>')
@@ -481,18 +492,19 @@ def create_artist_form():
 
 @app.route('/artists/create', methods=['POST'])
 def create_artist_submission():
-    # TODO use WTForms
+    form = ArtistForm(request.form)
+
     try:
-        name = request.form['name']
-        city = request.form['city']
-        state = request.form['state']
-        phone = request.form.get('phone')
-        genres = request.form.getlist('genres')
-        facebook_link = request.form.get('facebook_link')
-        image_link = request.form.get('image_link')
-        website = request.form.get('website')
-        seeking_venue = request.form.get('seeking_venue')
-        seeking_description = request.form.get('seeking_description')
+        name = form.name.data
+        city = form.city.data
+        state = form.state.data
+        phone = form.phone.data
+        genres = form.genres.data
+        facebook_link = form.facebook_link.data
+        image_link = form.image_link.data
+        website = form.website.data
+        seeking_venue = form.seeking_venue.data
+        seeking_description = form.seeking_description.data
 
         artist = Artist(
             name=name,
@@ -503,7 +515,7 @@ def create_artist_submission():
             facebook_link=facebook_link,
             website=website,
             image_link=image_link,
-            seeking_venue=True if seeking_venue == 'y' else False,
+            seeking_venue=seeking_venue,
             seeking_description=seeking_description
         )
 
@@ -562,11 +574,12 @@ def create_shows():
 
 @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # TODO use WTForms
+    form = ShowForm(request.form)
+
     try:
-        artist_id = request.form['artist_id']
-        venue_id = request.form['venue_id']
-        start_time = request.form.get('start_time')
+        artist_id = form.artist_id.data
+        venue_id = form.venue_id.data
+        start_time = form.start_time.data
 
         show = Show(
             artist_id=artist_id,
