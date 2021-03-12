@@ -15,7 +15,7 @@ from flask_wtf import Form
 from forms import *
 import sys
 from datetime import datetime
-from models import *
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
@@ -26,6 +26,8 @@ app.config.from_object('config')
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)
+
+from models import *
 
 #----------------------------------------------------------------------------#
 # Filters.
